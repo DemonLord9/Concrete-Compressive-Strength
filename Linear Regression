@@ -1,0 +1,74 @@
+import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+
+import sklearn
+from sklearn.preprocessing import LabelEncoder
+from sklearn import datasets, linear_model
+from sklearn.model_selection import train_test_split
+
+matplotlib.use('GTKAgg')
+
+RANDOM_SEED = 42
+
+def rmse(predictions, targets):
+    return np.sqrt(((predictions - targets) ** 2).mean())
+
+def get_data():
+    """ Read the iris data set and split them into training and test sets """
+##    iris   = datasets.load_iris()
+##    data   = iris["data"]
+##    target = iris["target"]
+
+    df = pd.read_excel("Concrete_Data.xls")
+    dataset = df.values
+    # split into input (X) and output (Y) variables
+    data = dataset[:,0:8]
+    target = dataset[:,8]
+
+    indexes_y = np.array([0]*len(target))
+    for i in range(0,len(target)):
+        indexes_y[i] = target[i]
+    # Prepend the column of 1s for bias
+    N, M  = data.shape
+    all_X = np.ones((N, M + 1))
+    all_X[:, 1:] = data
+
+##    # Convert into one-hot vectors
+##    num_labels = len(np.unique(target))
+##
+##    all_Y = np.eye(num_labels)[indexes_y]  # One liner trick!
+    return train_test_split(all_X, target, test_size=0.33, random_state=RANDOM_SEED)
+
+train_X, test_X, train_y, test_y = get_data()
+
+# Create linear regression object
+regr = linear_model.LinearRegression()
+ 
+# Train the model using the training sets
+regr.fit(train_X, train_y)
+ 
+# Plot outputs
+
+y_pred = regr.predict(test_X)
+print('Coefficients: \n', regr.coef_)
+# The mean squared error
+print("Mean squared error: %.2f" % np.mean((y_pred - test_y) ** 2))
+# Explained variance score: 1 is perfect prediction
+print('Variance score: %.2f' % regr.score(test_X, test_y))
+
+##plt.scatter(test_X[:,1], regr.predict(test_X), color='red',linewidth=1)
+
+#print( str(round(regr.predict(5000))) )
+
+print(test_X.shape,test_y.shape)
+
+rmse_val = rmse(y_pred, test_y)
+print("rms error is: " + str(rmse_val))
+
+plt.scatter(test_y, y_pred)
+plt.plot([test_y.min(), test_y.max()], [test_y.min(), test_y.max()], 'k--', lw=3)
+plt.xlabel('Measured')
+plt.ylabel('Predicted')
+plt.show()
